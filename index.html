@@ -576,15 +576,22 @@ function plainText(html) {
 
 function buildAiPrompt(q, answer) {
   return [
-    'Eres examinador de inglés B1. Corrige este ensayo y ponle una nota de 0 a 25.',
+    'Revisa este ensayo que escribí para un examen b1 de ingles, cuánto me calificarías sobre 25?',
     '',
     'Tarea: ' + plainText(q.questionText),
     '',
     'Ensayo del estudiante:',
     (answer || '').trim() || '(vacío)',
-    '',
-    'Responde solo con: nota X/25 y 2-3 correcciones concretas.',
   ].join('\n');
+}
+
+function practiceComplete() {
+  return simState.questions.every((q, i) => {
+    const a = simState.answers[i];
+    if (a.checked) return true;
+    if (q.type === 'essay') return a.aiUsed || String(a.picked[0] || '').trim() !== '';
+    return false;
+  });
 }
 
 function openAiPrompt(text) {
@@ -782,9 +789,9 @@ $simCheck.addEventListener('click', () => {
   if (a.checked) return;
   const q = simState.questions[simState.index];
   if (q.type === 'essay') {
-    openAiPrompt(buildAiPrompt(q, a.picked[0] || ''));
-    a.checked = true;
+    a.aiUsed = true;
     renderSimQuestion();
+    openAiPrompt(buildAiPrompt(q, a.picked[0] || ''));
     return;
   }
   buildAttempt(q, a);
@@ -828,10 +835,10 @@ function renderSimQuestion() {
   $simBody.appendChild(meta);
 
   const isEssay = q.type === 'essay';
-  if (a.checked) {
+  if (a.checked && !isEssay) {
     $simBody.appendChild(renderQuestion(buildAttempt(q, a)));
     $simCheck.disabled = true;
-    $simCheck.textContent = isEssay ? '✓ Revisada' : '✓ Comprobada';
+    $simCheck.textContent = '✓ Comprobada';
   } else {
     $simBody.appendChild(renderSimAnswer(q, a));
     $simCheck.disabled = false;
@@ -840,7 +847,7 @@ function renderSimQuestion() {
   $simPrev.disabled = simState.index === 0;
   $simNext.disabled = simState.index === simState.questions.length - 1;
 
-  if (simState.answers.every((x) => x.checked)) {
+  if (practiceComplete()) {
     $simBody.appendChild(simSummary());
   }
 }
