@@ -164,6 +164,7 @@ body{
 .sim-gap{display:inline-block;margin:0 4px;padding:6px 10px;background:#fff;color:var(--ink);border:1.5px solid var(--line-strong);border-radius:9px;font-size:.95rem;font-family:inherit;max-width:100%}
 .sim-essay{width:100%;min-height:140px;margin-top:10px;padding:14px 16px;background:#fbfcff;color:var(--ink);border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:1rem;line-height:1.6;resize:vertical}
 .sim-essay:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+.essay-counter{text-align:right;color:var(--muted);font-size:.8rem;margin-top:6px;font-variant-numeric:tabular-nums}
 .sim-hint{color:var(--muted);font-size:.86rem;margin:10px 0 4px}
 .sim-choices{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
 .sim-chip{padding:6px 14px;background:#f3f5fb;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.86rem}
@@ -1033,10 +1034,17 @@ function renderSimAnswer(q, a) {
     ta.className = 'sim-essay';
     ta.placeholder = 'Escribe tu respuesta aquí…';
     ta.value = a.picked[0] || '';
+    const count = document.createElement('div');
+    count.className = 'essay-counter';
+    const words = (v) => (String(v || '').trim().match(/\S+/g) || []).length;
+    const label = (n) => (n === 1 ? '1 palabra' : n + ' palabras');
+    count.textContent = label(words(ta.value));
     ta.addEventListener('input', () => {
       a.picked[0] = ta.value;
+      count.textContent = label(words(ta.value));
     });
     div.appendChild(ta);
+    div.appendChild(count);
   } else {
     const hint = document.createElement('div');
     hint.className = 'sim-hint';
